@@ -1,0 +1,197 @@
+<!doctype html>
+<!--
+	The view outside Paperly, for screenshots and quick work on its look: a
+	stand-in for the Zotero object, Paperly's colours, and src/bootstrap.js as
+	it ships. Not part of the .xpi.
+
+	Query:
+	  theme=light|dark
+	  mode=mock     answers with a made-up result shaped like the actor's
+	  mode=live     calls the real Apify API (with token=..., which is only kept
+	                in this page)
+	  token=...     a token to start with; "none" starts without one
+	  run=1         fills in the sample passage and presses Check
+-->
+<meta charset="utf-8">
+<title>AI Detector preview</title>
+<style>
+	:root {
+		--material-background: #ffffff;
+		--material-button: #ffffff;
+		--fill-primary: rgba(0, 0, 0, 0.85);
+		--fill-secondary: rgba(0, 0, 0, 0.55);
+		--fill-quinary: rgba(0, 0, 0, 0.06);
+		--color-border: rgba(0, 0, 0, 0.15);
+		--color-border50: rgba(0, 0, 0, 0.08);
+		--accent-blue: #4072e5;
+		--accent-blue50: rgba(64, 114, 229, 0.5);
+		--accent-red: #d12d2d;
+	}
+	:root.dark {
+		--material-background: #1e1e1e;
+		--material-button: #2c2c2c;
+		--fill-primary: rgba(255, 255, 255, 0.88);
+		--fill-secondary: rgba(255, 255, 255, 0.55);
+		--fill-quinary: rgba(255, 255, 255, 0.08);
+		--color-border: rgba(255, 255, 255, 0.16);
+		--color-border50: rgba(255, 255, 255, 0.08);
+		--accent-blue: #5b8cff;
+		--accent-blue50: rgba(91, 140, 255, 0.5);
+		--accent-red: #ff6b6b;
+	}
+	html, body {
+		margin: 0;
+		background: var(--material-background);
+		color: var(--fill-primary);
+		font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+	}
+	/* The Extensions window's own button look (scss/paperlyExtensions.scss) */
+	#extensions button:not(.link) {
+		appearance: none;
+		padding: 4px 12px;
+		border: 1px solid var(--color-border);
+		border-radius: 5px;
+		background: var(--material-button);
+		color: var(--fill-primary);
+		font: inherit;
+		white-space: nowrap;
+	}
+	#extensions button.primary {
+		border-color: transparent;
+		background: var(--accent-blue);
+		color: #fff;
+	}
+	#extensions button:disabled {
+		opacity: 0.5;
+	}
+	button.link {
+		appearance: none;
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--accent-blue);
+		font: inherit;
+		text-decoration: underline;
+		cursor: pointer;
+	}
+	.view-header {
+		padding: 12px 16px 8px;
+		border-bottom: 1px solid var(--color-border50);
+	}
+	.view-header h1 {
+		margin: 0;
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--fill-secondary);
+	}
+	.view-body {
+		padding: 16px;
+	}
+</style>
+<div id="extensions">
+	<div class="view-header"><h1>AI Detector</h1></div>
+	<div class="view-body" id="body"></div>
+</div>
+<script>
+	const query = new URLSearchParams(location.search);
+	if (query.get("theme") == "dark") {
+		document.documentElement.classList.add("dark");
+	}
+	const SAMPLE = [
+		"Reading speed in second-language learners has been studied for decades.",
+		"In our own classes we noticed that students slowed down most on long noun phrases.",
+		"Furthermore, it is important to note that comprehension is a multifaceted construct that encompasses various cognitive processes.",
+		"Overall, these findings underscore the pivotal role of vocabulary knowledge in shaping reading fluency across diverse contexts.",
+		"We therefore timed forty students on two matched texts, one week apart.",
+	];
+	const MOCK = [{
+		success: true,
+		data: {
+			message: "OK",
+			code: "COM_OK",
+			data: {
+				timedOut: false,
+				value: {
+					chunks: [
+						{ text: SAMPLE[0], type: "HUMAN", aiScore: 0, confidence: "high" },
+						{ text: SAMPLE[1], type: "HUMAN", aiScore: 0, confidence: "high" },
+						{ text: SAMPLE[2], type: "AI", aiScore: 1, confidence: "high" },
+						{ text: SAMPLE[3], type: "AI_PARAPHRASED", aiScore: 1, confidence: "medium" },
+						{ text: SAMPLE[4], type: "HUMAN", aiScore: 0, confidence: "medium" },
+					],
+					modelVersion: "v7.1.0",
+				},
+			},
+			status: 200,
+		},
+	}];
+
+	const prefs = new Map();
+	if (query.get("token") && query.get("token") != "none") {
+		prefs.set("extensions.ai-detector.apifyToken", query.get("token"));
+	}
+	window.ADDON_UNINSTALL = 6;
+	window.Zotero = {
+		PaperlyExtensions: {
+			apiVersion: 1,
+			registerView(view) {
+				window.registeredView = view;
+				return () => {};
+			},
+			getContext: () => ({ items: [], reader: { selectedText: SAMPLE.join(" ") } }),
+			openWindow() {},
+		},
+		Reader: { registerEventListener() {}, unregisterEventListener() {} },
+		Prefs: {
+			get: (name) => prefs.get(name),
+			set: (name, value) => prefs.set(name, value),
+			clear: (name) => prefs.delete(name),
+		},
+		HTTP: {
+			TimeoutException: class extends Error {},
+			async request(method, url, options) {
+				if (query.get("mode") != "live") {
+					await new Promise((resolve) => setTimeout(resolve, 300));
+					return { status: 201, response: MOCK };
+				}
+				let response;
+				try {
+					response = await fetch(url, { method, headers: options.headers, body: options.body });
+				}
+				catch (e) {
+					throw { status: 0, message: e.message };
+				}
+				let json = null;
+				try {
+					json = await response.json();
+				}
+				catch (e) {}
+				if (response.status < 200 || response.status >= 300) {
+					throw { status: response.status, xmlhttp: { status: response.status, response: json } };
+				}
+				return { status: response.status, response: json };
+			},
+		},
+		launchURL: (url) => console.log("launch", url),
+	};
+</script>
+<script src="../src/bootstrap.js"></script>
+<script>
+	startup({ id: "ai-detector@quynhtl.github.io", rootURI: "../src/" });
+	const body = document.getElementById("body");
+	registeredView.onRender({ body, window });
+	if (query.get("run") == "1") {
+		const buttons = [...body.querySelectorAll("button")];
+		buttons.find((b) => b.textContent.startsWith("Use the reader")).click();
+		buttons.find((b) => b.textContent == "Check").click();
+	}
+	// For headless screenshots: settle, then say so
+	const settle = setInterval(() => {
+		if (!body.querySelector(".aid-status").textContent.startsWith("Checking")) {
+			clearInterval(settle);
+			document.title = "ready";
+		}
+	}, 100);
+</script>

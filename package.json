@@ -1,0 +1,12 @@
+{
+  "name": "paperly-ai-detector",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A Paperly extension that checks how much of a passage reads as AI-written, with the community QuillBot AI Detector actor on Apify.",
+  "license": "MIT",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test"
+  }
+}

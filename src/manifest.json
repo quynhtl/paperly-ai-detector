@@ -1,0 +1,20 @@
+{
+  "manifest_version": 2,
+  "name": "AI Detector",
+  "version": "1.0.0",
+  "description": "Checks how much of a passage reads as AI-written, with the community QuillBot AI Detector actor on Apify. Not made by or affiliated with QuillBot.",
+  "author": "quynhtl",
+  "homepage_url": "https://github.com/quynhtl/paperly-ai-detector",
+  "icons": {
+    "48": "icon-48.png",
+    "96": "icon-96.png"
+  },
+  "applications": {
+    "zotero": {
+      "id": "ai-detector@quynhtl.github.io",
+      "update_url": "https://quynhtl.github.io/paperly-extensions/updates/ai-detector@quynhtl.github.io.json",
+      "strict_min_version": "10.999",
+      "strict_max_version": "11.*"
+    }
+  }
+}

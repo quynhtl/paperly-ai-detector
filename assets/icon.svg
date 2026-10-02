@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <!-- AI Detector's icon: a page with one line flagged, under a lens.
+       Rendered to src/icon-48.png and src/icon-96.png by scripts/icons.sh. -->
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5D5FEF"/>
+      <stop offset="1" stop-color="#2B2A7C"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="88" height="88" rx="20" fill="url(#plate)"/>
+  <rect x="18" y="16" width="46" height="58" rx="7" fill="#FFFFFF"/>
+  <rect x="26" y="27" width="30" height="5" rx="2.5" fill="#CBCAF2"/>
+  <rect x="26" y="37" width="24" height="5" rx="2.5" fill="#FF9F2E"/>
+  <rect x="26" y="47" width="28" height="5" rx="2.5" fill="#CBCAF2"/>
+  <line x1="68" y1="68" x2="81" y2="81" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="58" cy="58" r="16" fill="#2B2A7C" stroke="#FFFFFF" stroke-width="5"/>
+  <text x="58" y="63.5" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="15" fill="#FFFFFF">AI</text>
+</svg>
