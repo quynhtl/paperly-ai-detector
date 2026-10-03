@@ -204,19 +204,30 @@ function readResult(items) {
 	if (!item || typeof item != "object") {
 		throw new Error("The actor finished without an answer. Try again.");
 	}
-	// The detector's reply, as the actor passes it on
-	let reply = item.data;
-	if (item.success === false || !reply || (reply.status && reply.status != 200)) {
-		let said = (reply && reply.message) || item.error || item.message;
+	if (item.success === false) {
+		let said = (item.data && item.data.message) || item.error || item.message;
 		throw new Error(`The detector couldn’t check this passage${said ? `: ${said}` : "."}`);
 	}
-	let outcome = reply.data || {};
-	if (outcome.timedOut) {
+	// The actor answers with the verdict itself ({ success, text, aiScore,
+	// chunks }); its page shows it wrapped in the detector's own reply
+	// ({ data: { status, data: { timedOut, value } } }), so both are read
+	let value = item;
+	if (!Array.isArray(item.chunks) && item.data) {
+		let reply = item.data;
+		if (reply.status && reply.status != 200) {
+			throw new Error(`The detector couldn’t check this passage${reply.message ? `: ${reply.message}` : "."}`);
+		}
+		let outcome = reply.data || {};
+		if (outcome.timedOut) {
+			throw new Error("The detector ran out of time. Try again, or try a shorter passage.");
+		}
+		value = outcome.value || {};
+	}
+	if (item.timedOut) {
 		throw new Error("The detector ran out of time. Try again, or try a shorter passage.");
 	}
-	let value = outcome.value || {};
 	let chunks = (Array.isArray(value.chunks) ? value.chunks : [])
-		.filter(chunk => chunk && typeof chunk.text == "string" && chunk.text.trim());
+		.filter(chunk => chunk && typeof chunk.text == "string" && chunk.text.trim() && !chunk.isFailed);
 	if (!chunks.length) {
 		throw new Error("The detector gave no verdict for this passage.");
 	}

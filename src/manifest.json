@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "AI Detector",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Checks how much of a passage reads as AI-written, with the community QuillBot AI Detector actor on Apify. Not made by or affiliated with QuillBot.",
   "author": "quynhtl",
   "homepage_url": "https://github.com/quynhtl/paperly-ai-detector",

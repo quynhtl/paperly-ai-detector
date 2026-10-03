@@ -64,6 +64,25 @@ function answer(chunks) {
 	return [{ success: true, data: { status: 200, data: { timedOut: false, value: { chunks, modelVersion: "v7.1.0" } } } }];
 }
 
+// What the actor really answered, 2026-10-03
+const REAL = JSON.parse(`[{"success":true,"text":"My name are Hiro","aiScore":0,"humanParaphrasedScore":0,"aiParaphrasedScore":0,"chunks":[{"text":"My name are Hiro","startSpan":0,"endSpan":16,"type":"HUMAN","aiScore":0,"humanScore":null,"aiRefinedScore":null,"humanParaphrasedScore":0,"aiParaphrasedScore":0,"isFailed":false,"explainer":null,"id":"7ec1c265-2212-4f58-ade7-323b9fb98deb","confidence":"high","aiSource":null}]}]`);
+
+test("reads what the actor really answers", () => {
+	const { readResult } = load();
+	const verdict = readResult(REAL);
+	assert.equal(verdict.aiPercent, 0);
+	assert.deepEqual(plain(verdict.shares.map((s) => [s.type, s.percent])), [["HUMAN", 100]]);
+	assert.equal(verdict.chunks[0].text, "My name are Hiro");
+	assert.equal(verdict.model, null);
+});
+
+test("leaves out a piece the detector failed on", () => {
+	const { readResult } = load();
+	const [item] = plain(REAL);
+	item.chunks.push({ text: "Lost.", type: "AI", isFailed: true });
+	assert.equal(readResult([item]).aiPercent, 0);
+});
+
 test("reads the actor's own example", () => {
 	const { readResult } = load();
 	const verdict = readResult(EXAMPLE);
